@@ -1,0 +1,8 @@
+Release/
+Debug/
+*.opensdf
+*.sdf
+*.VC.opendb
+*.VC.db
+.suo
+*.zip
