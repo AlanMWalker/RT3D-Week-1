@@ -152,12 +152,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		else
 		{
 			// Animate the cube by rotating it in the Y axis
-			static float r = 0.0f;
-			r += 0.001f;
-			mWorld = Matrix::CreateRotationY(r);
-			cubeyBaby.rotateY(0.001f);
-			cubeyBaby.rotateX(0.001f);
-			cubeyBaby.rotateZ(0.001f);
+			cubeyBaby.update();
 			// Clear the back buffer to a dark blue
 			float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red,green,blue,alpha
 			g_pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);

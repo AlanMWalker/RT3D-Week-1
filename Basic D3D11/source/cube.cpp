@@ -7,8 +7,6 @@ Cube::Cube(const Vector3& position, const Vector3& rotation)
 	m_position = position;
 	m_rotation = rotation;
 	updateWorldMatrix();
-
-	//m_world = Matrix::CreateWorld(position, Vector3(0, 0, 1), Vector3(0, 1, 0));
 }
 
 void Cube::setPosition(const DirectX::SimpleMath::Vector3 & position)
@@ -42,13 +40,26 @@ void Cube::rotateZ(float radians)
 
 void Cube::move(const DirectX::SimpleMath::Vector3 & move)
 {
-	m_position += move; 
+	m_position += move;
 	updateWorldMatrix();
+}
+
+void Cube::update()
+{
+	const static float delta = 0.001f;
+	const Vector3 position = getPosition();
+	static int direction = 1;
+
+	if (position.y >= 3.5f || position.y <= -3.5f)
+	{
+		direction *= -1;
+	}
+
+	move(Vector3(0.0f, direction * delta, 0.0f));
+	rotateY(direction * delta);
 }
 
 void Cube::updateWorldMatrix()
 {
-	Matrix temp = Matrix::CreateRotationX(m_rotation.x) * Matrix::CreateRotationY(m_rotation.y) * Matrix::CreateRotationZ(m_rotation.z);
-
-	m_world = temp * Matrix::CreateWorld(m_position, Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
+	m_world = (Matrix::CreateRotationX(m_rotation.x) * Matrix::CreateRotationY(m_rotation.y) * Matrix::CreateRotationZ(m_rotation.z)) * Matrix::CreateWorld(m_position, Vector3(0.0f, 0.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f));
 }

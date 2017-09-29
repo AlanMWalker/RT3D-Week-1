@@ -15,6 +15,10 @@ public:
 	const DirectX::SimpleMath::Matrix& getWorldMatrix() const { return m_world; }
 	const DirectX::SimpleMath::Vector3& getPosition() const { return m_position; }
 	const DirectX::SimpleMath::Vector3& getRotation() const { return m_rotation; }
+	
+	void update();
+
+private:
 
 	void setPosition(const DirectX::SimpleMath::Vector3& position);
 	void setRotation(const DirectX::SimpleMath::Vector3& rotation);
@@ -25,7 +29,6 @@ public:
 
 	void move(const DirectX::SimpleMath::Vector3& move);
 
-private:
 
 	void updateWorldMatrix();
 
