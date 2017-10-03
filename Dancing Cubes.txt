@@ -4,4 +4,4 @@ D - 3). Add a "Draw" function which renders the triangles for the cube (see line
 D - 4). In wWinMain of BasicD3D11.cpp: create an array of 100 pointers to instances of the cube class and use the new operator to allocate the instances, passing through random start positions (in the visible range). 
 D - 5). Call the "Update" and "Draw" functions for all 100 instances to make them appear when you run the application.
 D - 6). Can you make 100 dancing cubes?
-7). Note that this example has no depth buffer. What problems does that cause? Can you add one? (Luna Book might help).
+D - 7). Note that this example has no depth buffer. What problems does that cause? Can you add one? (Luna Book might help).
