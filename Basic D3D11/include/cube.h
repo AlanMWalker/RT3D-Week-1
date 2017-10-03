@@ -17,6 +17,7 @@ public:
 	const DirectX::SimpleMath::Vector3& getRotation() const { return m_rotation; }
 	
 	void update();
+	void draw();
 
 private:
 
