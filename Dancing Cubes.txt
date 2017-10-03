@@ -1,7 +1,7 @@
 D - 1). In a separate cpp (and h) file: create a "cube" class which encapsulates the position (and rotation, if you feel up to it) of a cube using a world matrix.
 D - 2). Add an "Update" function to the cube class which incrementally changes the cube's position and/or rotation and updates its world matrix accordingly (see lines 165-168 and lines 174-180 of BasicD3D11.cpp)
-3). Add a "Draw" function which renders the triangles for the cube (see lines 182-186 of BasicD3D11.cpp).
-4). In wWinMain of BasicD3D11.cpp: create an array of 100 pointers to instances of the cube class and use the new operator to allocate the instances, passing through random start positions (in the visible range). 
-5). Call the "Update" and "Draw" functions for all 100 instances to make them appear when you run the application.
-6). Can you make 100 dancing cubes?
+D - 3). Add a "Draw" function which renders the triangles for the cube (see lines 182-186 of BasicD3D11.cpp).
+D - 4). In wWinMain of BasicD3D11.cpp: create an array of 100 pointers to instances of the cube class and use the new operator to allocate the instances, passing through random start positions (in the visible range). 
+D - 5). Call the "Update" and "Draw" functions for all 100 instances to make them appear when you run the application.
+D - 6). Can you make 100 dancing cubes?
 7). Note that this example has no depth buffer. What problems does that cause? Can you add one? (Luna Book might help).

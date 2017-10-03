@@ -2,10 +2,29 @@
 
 using namespace DirectX::SimpleMath;
 
+Cube::Cube()
+	: m_rotation(Vector3(0.0f, 0.0f, 0.0f)), m_position(Vector3(0.0f, 0.0f, 0.0f))
+{
+}
+
 Cube::Cube(const Vector3& position, const Vector3& rotation)
 {
 	m_position = position;
 	m_rotation = rotation;
+
+	int i = (rand() % 4) + 1;
+	switch (i)
+	{
+	default:
+	case 1: m_direction.x = 1.0f; m_direction.y = 1.0f; break;
+	case 2: m_direction.x = -1.0f; m_direction.y = 1.0f; break;
+	case 3: m_direction.x = -1.0f; m_direction.y = -1.0f; break;
+	case 4: m_direction.x = 1.0f; m_direction.y = -1.0f; break;
+	}
+
+	m_direction.z = rand() % 2;
+	m_direction.z == 0 ? m_direction.z = -1 : m_direction.z = 1;
+
 	updateWorldMatrix();
 }
 
@@ -46,17 +65,38 @@ void Cube::move(const DirectX::SimpleMath::Vector3 & move)
 
 void Cube::update()
 {
-	const static float delta = 0.001f;
+	const float delta = 0.001f;
 	const Vector3 position = getPosition();
-	static int direction = 1;
 
-	if (position.y >= 3.5f || position.y <= -3.5f)
+	if (position.y >= 3.5f || position.y <= -3.5f || position.x > 3.5f || position.x < -3.5f)
 	{
-		direction *= -1;
-	}
+		m_direction.x *= -1;
+		m_direction.y *= -1;
+		m_direction.z *= -1;
+		//m_direction.z = 0;
 
-	move(Vector3(0.0f, direction * delta, 0.0f));
-	rotateY(direction * delta);
+		m_rotationAxis = (rand() % 3) + 1;
+	}
+	move(m_direction* delta);
+
+	switch (m_rotationAxis)
+	{
+	default:
+	case 0: rotateX(m_direction.x * delta); break;
+	case 1: rotateY(m_direction.x * delta); break;
+	case 2: rotateZ(m_direction.x * delta); break;
+	}
+}
+
+void Cube::draw(ID3D11DeviceContext * g_pImmediateContext) const
+{
+	assert(g_pImmediateContext);
+	if (g_pImmediateContext == nullptr)
+	{
+		return;
+	}
+	// Render the triangles
+	g_pImmediateContext->DrawIndexed(36, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
 }
 
 void Cube::updateWorldMatrix()

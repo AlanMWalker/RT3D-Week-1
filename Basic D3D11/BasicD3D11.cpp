@@ -23,12 +23,15 @@
 #include <DirectXMath.h>
 #include "SimpleMath.h"
 
+#include <random>
+#include <ctime>
+
 #include "include\VertexDefinitions.h"
 #include "include\cube.h"
 
 using namespace DirectX::SimpleMath;
 
-
+#define CUBE_COUNT 100
 
 // *************************************************************************************
 // Global Variables
@@ -40,7 +43,9 @@ D3D_FEATURE_LEVEL       g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 
 ID3D11Device*           g_pD3DDevice = NULL;
 ID3D11DeviceContext*    g_pImmediateContext = NULL;
-
+ID3D11Texture2D* g_d3dDepthStencilBuffer = NULL;
+ID3D11DepthStencilView* g_d3dDepthStencilView = NULL;
+ID3D11DepthStencilState* g_d3dDepthStencilState = NULL;
 // *************************************************************************************
 // Forward declarations
 // *************************************************************************************
@@ -76,8 +81,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	// First initialise the window using the Win32 API 
 	if (FAILED(InitWindow(hInstance, nCmdShow)))
 		return 0;
-	//Vector3(0.174f, 0.174f, 0.174f)
-	Cube cubeyBaby(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 0.0f));
+
+	srand((unsigned)time(0));
+
+
+	const auto generateRandomVec3 = [](float min, float max)
+	{
+		Vector3 v;
+		v.x = min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+
+		return v;
+	};
+
+	Cube* pCubes;
+	pCubes = new Cube[CUBE_COUNT];
+
+	for (int i = 0; i < 100; ++i)
+	{
+		pCubes[i] = Cube(generateRandomVec3(-10.0f, 10.0f), Vector3(0, 0, 0));
+	}
+
 	// Retrieve the coordinates of a window's client area so that we can create  
 	// an appropriate aspect ratio for the projection matrix
 	RECT rc;
@@ -137,6 +160,42 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	// Main message loop
 	MSG msg = { 0 };
 
+
+	{
+		D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
+		ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+		depthStencilBufferDesc.ArraySize = 1;
+		depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilBufferDesc.CPUAccessFlags = 0; // No CPU access required.
+		depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilBufferDesc.Width = 640;
+		depthStencilBufferDesc.Height = 480;
+		depthStencilBufferDesc.MipLevels = 1;
+		depthStencilBufferDesc.SampleDesc.Count = 1;
+		depthStencilBufferDesc.SampleDesc.Quality = 0;
+		depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		HRESULT hr = g_pD3DDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &g_d3dDepthStencilBuffer);
+		if (FAILED(hr))
+		{
+			return -1;
+		}
+
+		hr = g_pD3DDevice->CreateDepthStencilView(g_d3dDepthStencilBuffer, nullptr, &g_d3dDepthStencilView);
+
+		D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc;
+		ZeroMemory(&depthStencilStateDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+		depthStencilStateDesc.DepthEnable = TRUE;
+		depthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		depthStencilStateDesc.StencilEnable = FALSE;
+
+		hr = g_pD3DDevice->CreateDepthStencilState(&depthStencilStateDesc, &g_d3dDepthStencilState);
+		g_pImmediateContext->OMSetDepthStencilState(0, 0);
+	}
+
 	// Keep looping until the application is closed
 	while (WM_QUIT != msg.message)
 	{
@@ -152,25 +211,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		else
 		{
 			// Animate the cube by rotating it in the Y axis
-			cubeyBaby.update();
+			for (int i = 0; i < CUBE_COUNT; ++i)
+			{
+				pCubes[i].update();
+			}
 			// Clear the back buffer to a dark blue
 			float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red,green,blue,alpha
 			g_pImmediateContext->ClearRenderTargetView(pRenderTargetView, ClearColor);
 
-			// Update the constant buffer with the latest world, view and projection matrix
-			ConstantBuffer cb;
-			cb.mWorld = cubeyBaby.getWorldMatrix().Transpose();//mWorld.Transpose();
-			cb.mView = mView.Transpose();
-			cb.mProjection = mProjection.Transpose();
-			// This is sending data to the graphics card
-			g_pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
+			for (int i = 0; i < CUBE_COUNT; ++i)
+			{
+				// Update the constant buffer with the latest world, view and projection matrix
+				ConstantBuffer cb;
+				cb.mWorld = pCubes[i].getWorldMatrix().Transpose();//mWorld.Transpose();
+				cb.mView = mView.Transpose();
+				cb.mProjection = mProjection.Transpose();
+				// This is sending data to the graphics card
+				g_pImmediateContext->UpdateSubresource(pConstantBuffer, 0, NULL, &cb, 0, 0);
 
-			// Render the triangles
-			g_pImmediateContext->VSSetShader(pVertexShader, NULL, 0);
-			g_pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
-			g_pImmediateContext->PSSetShader(pPixelShader, NULL, 0);
-			g_pImmediateContext->DrawIndexed(36, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
-
+				// Render the triangles
+				g_pImmediateContext->VSSetShader(pVertexShader, NULL, 0);
+				g_pImmediateContext->VSSetConstantBuffers(0, 1, &pConstantBuffer);
+				g_pImmediateContext->PSSetShader(pPixelShader, NULL, 0);
+				//g_pImmediateContext->DrawIndexed(36, 0, 0);        // 36 vertices needed for 12 triangles in a triangle list
+				pCubes[i].draw(g_pImmediateContext);
+			}
 			// Present our back buffer to our front buffer
 			pSwapChain->Present(0, 0);
 
@@ -189,6 +254,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	if (pSwapChain) pSwapChain->Release();
 	if (g_pImmediateContext) g_pImmediateContext->Release();
 	if (g_pD3DDevice) g_pD3DDevice->Release();
+
+	delete[] pCubes;
 
 	return (int)msg.wParam;
 }
